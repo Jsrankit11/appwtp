@@ -1,4 +1,3 @@
-const API_KEY = 'YOUR_OPENWEATHER_API_KEY';
 const DEFAULT_CITY = 'New York';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -153,22 +152,26 @@ function initWeather() {
 }
 
 async function fetchWeatherData(city) {
-    if (API_KEY === 'YOUR_OPENWEATHER_API_KEY') {
-        renderMockData(city);
-        return;
-    }
-
     try {
-        const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`);
-        if (!weatherRes.ok) throw new Error('City not found');
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`);
+        if (!geoRes.ok) throw new Error('Geocoding Failed');
+        const geoData = await geoRes.json();
+        
+        if (!geoData.results || geoData.results.length === 0) {
+            throw new Error('City not found');
+        }
+        
+        const location = geoData.results[0];
+        const lat = location.latitude;
+        const lon = location.longitude;
+        const locName = `${location.name}, ${location.country}`;
+
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=auto`);
+        if (!weatherRes.ok) throw new Error('Weather fetch failed');
         const weatherData = await weatherRes.json();
 
-        updateCurrentWeatherUI(weatherData);
-
-        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${API_KEY}`);
-        const forecastData = await forecastRes.json();
-        
-        updateForecastUI(forecastData);
+        updateCurrentWeatherUI(weatherData, locName);
+        updateForecastUI(weatherData);
 
     } catch (error) {
         console.error(error);
@@ -177,87 +180,88 @@ async function fetchWeatherData(city) {
     }
 }
 
-function updateCurrentWeatherUI(data) {
-    document.getElementById('location-name').textContent = `${data.name}, ${data.sys.country}`;
-    document.getElementById('weather-description').textContent = data.weather[0].description;
-    document.getElementById('current-temp').textContent = `${Math.round(data.main.temp)}°`;
+function updateCurrentWeatherUI(data, locName) {
+    const current = data.current;
+    const daily = data.daily;
     
-    document.getElementById('humidity-val').textContent = `${data.main.humidity}%`;
-    document.getElementById('wind-val').textContent = `${(data.wind.speed * 3.6).toFixed(1)} km/h`;
+    document.getElementById('location-name').textContent = locName;
+    document.getElementById('weather-description').textContent = getWeatherDescription(current.weather_code);
+    document.getElementById('current-temp').textContent = `${Math.round(current.temperature_2m)}°`;
     
-    const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    document.getElementById('sunrise-val').textContent = sunrise;
-    document.getElementById('sunset-val').textContent = sunset;
+    document.getElementById('humidity-val').textContent = `${current.relative_humidity_2m}%`;
+    document.getElementById('wind-val').textContent = `${current.wind_speed_10m.toFixed(1)} km/h`;
+    
+    const sunriseTime = new Date(daily.sunrise[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const sunsetTime = new Date(daily.sunset[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    document.getElementById('sunrise-val').textContent = sunriseTime;
+    document.getElementById('sunset-val').textContent = sunsetTime;
 
-    document.getElementById('uv-val').textContent = "N/A";
+    document.getElementById('uv-val').textContent = daily.uv_index_max[0] ? daily.uv_index_max[0].toFixed(1) : "N/A";
     document.getElementById('aqi-val').textContent = "Good";
 
-    setWeatherIcon('weather-icon-main', data.weather[0].icon, true);
+    setWeatherIcon('weather-icon-main', current.weather_code, true);
 }
 
 function updateForecastUI(data) {
     const container = document.getElementById('forecast-container');
     container.innerHTML = '';
+    
+    const daily = data.daily;
 
-    const dailyData = {};
-    data.list.forEach(item => {
-        const date = item.dt_txt.split(' ')[0];
-        if (!dailyData[date] && item.dt_txt.includes("12:00:00")) {
-            dailyData[date] = item;
-        }
-    });
-
-    Object.values(dailyData).slice(0, 7).forEach(dayData => {
-        const dateObj = new Date(dayData.dt * 1000);
+    for (let i = 0; i < 7 && i < daily.time.length; i++) {
+        const dateObj = new Date(daily.time[i]);
         const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-        const temp = Math.round(dayData.main.temp);
-        const iconCode = dayData.weather[0].icon;
+        const tempMax = Math.round(daily.temperature_2m_max[i]);
+        const wCode = daily.weather_code[i];
 
         const card = document.createElement('div');
         card.className = 'forecast-card glass hover-scale';
         
-        let iconHtml = getWeatherIconHtml(iconCode);
+        let iconHtml = getWeatherIconHtml(wCode);
 
         card.innerHTML = `
             <span class="day">${dayName}</span>
             ${iconHtml}
             <div class="temps">
-                <span class="max">${temp}°</span>
+                <span class="max">${tempMax}°</span>
             </div>
         `;
         container.appendChild(card);
-    });
+    }
 }
 
-function getWeatherIconHtml(iconCode) {
-    const iconMap = {
-        '01d': '<i class="fa-solid fa-sun icon-glow-yellow"></i>',
-        '01n': '<i class="fa-solid fa-moon icon-glow"></i>',
-        '02d': '<i class="fa-solid fa-cloud-sun icon-glow-yellow"></i>',
-        '02n': '<i class="fa-solid fa-cloud-moon icon-glow"></i>',
-        '03d': '<i class="fa-solid fa-cloud icon-glow"></i>',
-        '03n': '<i class="fa-solid fa-cloud icon-glow"></i>',
-        '04d': '<i class="fa-solid fa-cloud icon-glow"></i>',
-        '04n': '<i class="fa-solid fa-cloud icon-glow"></i>',
-        '09d': '<i class="fa-solid fa-cloud-showers-heavy icon-glow-blue"></i>',
-        '09n': '<i class="fa-solid fa-cloud-showers-heavy icon-glow-blue"></i>',
-        '10d': '<i class="fa-solid fa-cloud-rain icon-glow-blue"></i>',
-        '10n': '<i class="fa-solid fa-cloud-rain icon-glow-blue"></i>',
-        '11d': '<i class="fa-solid fa-bolt icon-glow-yellow"></i>',
-        '11n': '<i class="fa-solid fa-bolt icon-glow-yellow"></i>',
-        '13d': '<i class="fa-solid fa-snowflake icon-glow-cyan"></i>',
-        '13n': '<i class="fa-solid fa-snowflake icon-glow-cyan"></i>',
-        '50d': '<i class="fa-solid fa-smog icon-glow"></i>',
-        '50n': '<i class="fa-solid fa-smog icon-glow"></i>'
+function getWeatherDescription(code) {
+    const descMap = {
+        0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+        45: "Fog", 48: "Depositing rime fog", 51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
+        56: "Light freezing drizzle", 57: "Dense freezing drizzle", 61: "Slight rain", 63: "Moderate rain",
+        65: "Heavy rain", 66: "Light freezing rain", 67: "Heavy freezing rain", 71: "Slight snow",
+        73: "Moderate snow", 75: "Heavy snow", 77: "Snow grains", 80: "Slight rain showers",
+        81: "Moderate rain showers", 82: "Violent rain showers", 85: "Slight snow showers",
+        86: "Heavy snow showers", 95: "Thunderstorm", 96: "Thunderstorm with slight hail", 99: "Thunderstorm with heavy hail"
     };
-    return iconMap[iconCode] || '<i class="fa-solid fa-cloud icon-glow"></i>';
+    return descMap[code] || "Unknown";
 }
 
-function setWeatherIcon(elementId, iconCode, isLarge = false) {
+function getWeatherIconHtml(code) {
+    let iconClass = 'fa-cloud icon-glow';
+    
+    if (code === 0) iconClass = 'fa-sun icon-glow-yellow';
+    else if (code === 1 || code === 2) iconClass = 'fa-cloud-sun icon-glow-yellow';
+    else if (code === 3) iconClass = 'fa-cloud icon-glow';
+    else if (code === 45 || code === 48) iconClass = 'fa-smog icon-glow';
+    else if ([51, 53, 55, 56, 57].includes(code)) iconClass = 'fa-cloud-rain icon-glow-blue';
+    else if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) iconClass = 'fa-cloud-showers-heavy icon-glow-blue';
+    else if ([71, 73, 75, 77, 85, 86].includes(code)) iconClass = 'fa-snowflake icon-glow-cyan';
+    else if ([95, 96, 99].includes(code)) iconClass = 'fa-bolt icon-glow-yellow';
+    
+    return `<i class="fa-solid ${iconClass}"></i>`;
+}
+
+function setWeatherIcon(elementId, code, isLarge = false) {
     const el = document.getElementById(elementId);
     el.className = '';
-    const iconHtml = getWeatherIconHtml(iconCode);
+    const iconHtml = getWeatherIconHtml(code);
     const match = iconHtml.match(/class="(.*?)"/);
     if (match) {
         let classes = match[1];
@@ -267,37 +271,6 @@ function setWeatherIcon(elementId, iconCode, isLarge = false) {
         }
         el.className = classes;
     }
-}
-
-function renderMockData(city) {
-    document.getElementById('location-name').textContent = city || DEFAULT_CITY;
-    document.getElementById('weather-description').textContent = "clear sky (MOCK)";
-    document.getElementById('current-temp').textContent = "24°";
-    
-    document.getElementById('humidity-val').textContent = "45%";
-    document.getElementById('wind-val').textContent = "12.5 km/h";
-    document.getElementById('uv-val').textContent = "6.2";
-    document.getElementById('aqi-val').textContent = "42";
-    document.getElementById('sunrise-val').textContent = "06:15 AM";
-    document.getElementById('sunset-val').textContent = "07:45 PM";
-
-    const container = document.getElementById('forecast-container');
-    container.innerHTML = '';
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    
-    days.forEach((day, index) => {
-        const card = document.createElement('div');
-        card.className = 'forecast-card glass hover-scale';
-        const temp = 20 + Math.floor(Math.random() * 10);
-        card.innerHTML = `
-            <span class="day">${day}</span>
-            <i class="fa-solid ${index % 2 === 0 ? 'fa-sun icon-glow-yellow' : 'fa-cloud-sun icon-glow-yellow'}"></i>
-            <div class="temps">
-                <span class="max">${temp}°</span>
-            </div>
-        `;
-        container.appendChild(card);
-    });
 }
 
 function initContactForm() {
