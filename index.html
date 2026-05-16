@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexGen | Weather & Portfolio Dashboard</title>
+    <meta name="description" content="A premium futuristic weather dashboard and personal portfolio built with glassmorphism UI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-particles" id="particles"></div>
+    <div class="bg-gradient"></div>
+
+    <nav class="navbar glass">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <span class="glow-text">NEX</span>GEN
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#weather">Weather</a></li>
+                <li><a href="#forecast">Forecast</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="hamburger">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h1 class="glitch-text" data-text="Welcome to the Future">Welcome to the Future</h1>
+                <p class="subtitle">Experience weather and data like never before.</p>
+                <div class="hero-buttons">
+                    <a href="#weather" class="btn btn-primary neon-shadow">Launch Dashboard</a>
+                    <a href="#about" class="btn btn-secondary glass">Explore Portfolio</a>
+                </div>
+            </div>
+            
+            <div class="clock-container glass neon-border hover-scale">
+                <div class="clock-time" id="clock-time">00:00:00</div>
+                <div class="clock-date" id="clock-date">Mon, Jan 01, 2024</div>
+            </div>
+        </section>
+
+        <section id="about" class="section about">
+            <h2 class="section-title">System <span class="glow-text">Overview</span></h2>
+            <div class="about-grid">
+                <div class="about-card glass hover-scale">
+                    <i class="fa-solid fa-microchip icon-glow"></i>
+                    <h3>High Performance</h3>
+                    <p>Built with optimized Vanilla JavaScript for Apple-level smoothness and lightning-fast load times.</p>
+                </div>
+                <div class="about-card glass hover-scale">
+                    <i class="fa-solid fa-vr-cardboard icon-glow"></i>
+                    <h3>Futuristic UI</h3>
+                    <p>Designed using cutting-edge glassmorphism, neon shadows, and fluid animations for a premium feel.</p>
+                </div>
+                <div class="about-card glass hover-scale">
+                    <i class="fa-solid fa-satellite-dish icon-glow"></i>
+                    <h3>Real-Time Data</h3>
+                    <p>Connected to the OpenWeather API to provide hyper-accurate, real-time meteorological data.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="weather" class="section weather">
+            <h2 class="section-title">Live <span class="glow-text">Telemetry</span></h2>
+            
+            <div class="search-container glass">
+                <input type="text" id="city-input" placeholder="Enter coordinates or city name...">
+                <button id="search-btn" class="btn-icon"><i class="fa-solid fa-location-crosshairs"></i></button>
+            </div>
+
+            <div class="weather-dashboard">
+                <div class="main-weather glass neon-border fade-in">
+                    <div class="weather-header">
+                        <h3 id="location-name">Connecting...</h3>
+                        <div class="weather-status" id="weather-description">Standby</div>
+                    </div>
+                    <div class="weather-body">
+                        <div class="temp-display">
+                            <i id="weather-icon-main" class="fa-solid fa-cloud-sun icon-glow-large"></i>
+                            <h1 id="current-temp">--°</h1>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="weather-details fade-in">
+                    <div class="detail-card glass hover-scale">
+                        <i class="fa-solid fa-droplet icon-glow-blue"></i>
+                        <div class="detail-info">
+                            <span class="label">Humidity</span>
+                            <span class="value" id="humidity-val">--%</span>
+                        </div>
+                    </div>
+                    <div class="detail-card glass hover-scale">
+                        <i class="fa-solid fa-wind icon-glow-cyan"></i>
+                        <div class="detail-info">
+                            <span class="label">Wind Speed</span>
+                            <span class="value" id="wind-val">-- km/h</span>
+                        </div>
+                    </div>
+                    <div class="detail-card glass hover-scale">
+                        <i class="fa-solid fa-sun icon-glow-yellow"></i>
+                        <div class="detail-info">
+                            <span class="label">UV Index</span>
+                            <span class="value" id="uv-val">--</span>
+                        </div>
+                    </div>
+                    <div class="detail-card glass hover-scale">
+                        <i class="fa-solid fa-lungs icon-glow-green"></i>
+                        <div class="detail-info">
+                            <span class="label">Air Quality</span>
+                            <span class="value" id="aqi-val">--</span>
+                        </div>
+                    </div>
+                    <div class="detail-card glass hover-scale">
+                        <i class="fa-solid fa-arrow-up-from-horizon icon-glow-orange"></i>
+                        <div class="detail-info">
+                            <span class="label">Sunrise</span>
+                            <span class="value" id="sunrise-val">--:--</span>
+                        </div>
+                    </div>
+                    <div class="detail-card glass hover-scale">
+                        <i class="fa-solid fa-arrow-down-to-horizon icon-glow-red"></i>
+                        <div class="detail-info">
+                            <span class="label">Sunset</span>
+                            <span class="value" id="sunset-val">--:--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="forecast" class="section forecast">
+            <h2 class="section-title">7-Day <span class="glow-text">Projections</span></h2>
+            
+            <div class="forecast-slider-container fade-in">
+                <div class="forecast-slider" id="forecast-container">
+                    <div class="forecast-card glass hover-scale loading">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-icon"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="forecast-card glass hover-scale loading">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-icon"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="forecast-card glass hover-scale loading">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-icon"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="forecast-card glass hover-scale loading">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-icon"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="forecast-card glass hover-scale loading">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-icon"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="forecast-card glass hover-scale loading">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-icon"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="forecast-card glass hover-scale loading">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-icon"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="section contact">
+            <h2 class="section-title">Establish <span class="glow-text">Link</span></h2>
+            
+            <div class="contact-container">
+                <form class="contact-form glass fade-in" id="contact-form">
+                    <div class="input-group">
+                        <input type="text" id="name" required>
+                        <label for="name">Identifier (Name)</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="email" id="email" required>
+                        <label for="email">Transmission Channel (Email)</label>
+                    </div>
+                    <div class="input-group">
+                        <textarea id="message" rows="5" required></textarea>
+                        <label for="message">Data Payload (Message)</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary neon-shadow w-100">Initiate Transfer</button>
+                </form>
+                
+                <div class="social-links fade-in">
+                    <a href="#" class="social-btn glass hover-scale"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="social-btn glass hover-scale"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#" class="social-btn glass hover-scale"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="#" class="social-btn glass hover-scale"><i class="fa-brands fa-instagram"></i></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="glass-footer">
+        <div class="footer-content">
+            <p>&copy; 2024 NEXGEN OS. All Systems Operational.</p>
+        </div>
+    </footer>
+
+    <div id="loader" class="loader-wrapper">
+        <div class="neon-spinner"></div>
+        <div class="loader-text pulse-glow">INITIALIZING SYSTEMS...</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
